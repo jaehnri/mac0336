@@ -1,6 +1,5 @@
 import secrets
 import hashlib
-import numpy as np
 
 def generate_random_128_bit():
     return format(secrets.randbits(128), '0128b')
