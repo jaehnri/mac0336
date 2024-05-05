@@ -25,8 +25,7 @@ def xor_128_bit_sequences(a, b):
     
     return format(result, '0128b')
 
-
-def oaep(nusp):
+def oaep_padding(nusp):
     r = generate_random_128_bit()
     complemented_r = complement_to_n_bits(r, 256)
 
@@ -43,8 +42,16 @@ def oaep(nusp):
 
     return x, y
 
-def generate_keys():
-    return 11, 13
+def oaep_unpadding(x, y):
+    complemented_x = complement_to_n_bits(x, 256)
+    r = xor_128_bit_sequences(G(complemented_x), y)
+
+    complemented_r = complement_to_n_bits(r, 256)
+    complemented_message = xor_128_bit_sequences(x, G(complemented_r))
+    message = complemented_message[:32]
+
+    return message
+
 
 def mod_inverse(a, m):
     m0, x0, x1 = m, 0, 1
@@ -83,3 +90,6 @@ print(encrypted)
 
 decrypted = rsa.decrypt(encrypted)
 print(decrypted)
+
+x, y = oaep_padding(11796378)
+print(oaep_unpadding(x, y))
