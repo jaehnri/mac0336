@@ -25,34 +25,6 @@ def xor_128_bit_sequences(a, b):
     
     return format(result, '0128b')
 
-def oaep_padding(nusp):
-    r = generate_random_128_bit()
-    complemented_r = complement_to_n_bits(r, 256)
-
-    message = "{:032b}".format(nusp)
-    complemented_message = complement_to_n_bits(message, 128)
-
-    gr = G(complemented_r)
-
-    x = xor_128_bit_sequences(gr, complemented_message)
-    complemented_x = complement_to_n_bits(x, 256)
-
-    hx = G(complemented_x)
-    y = xor_128_bit_sequences(hx, r)
-
-    return x, y
-
-def oaep_unpadding(x, y):
-    complemented_x = complement_to_n_bits(x, 256)
-    r = xor_128_bit_sequences(G(complemented_x), y)
-
-    complemented_r = complement_to_n_bits(r, 256)
-    complemented_message = xor_128_bit_sequences(x, G(complemented_r))
-    message = complemented_message[:32]
-
-    return message
-
-
 def mod_inverse(a, m):
     m0, x0, x1 = m, 0, 1
     while a > 1:
@@ -61,13 +33,40 @@ def mod_inverse(a, m):
         x0, x1 = x1 - q * x0, x0
     return x1 + m0 if x1 < 0 else x1
 
-class RSA:
+class RSA_OAEP:
     def __init__(self, q, r):
         self.q = q
         self.r = r
         self.n = q * r
         self.phi = (q - 1) * (r - 1)
         self.public_key, self.private_key = self.generate_key_pair()
+    
+    def oaep_padding(self, nusp):
+        r = generate_random_128_bit()
+        complemented_r = complement_to_n_bits(r, 256)
+
+        message = "{:032b}".format(nusp)
+        complemented_message = complement_to_n_bits(message, 128)
+
+        gr = G(complemented_r)
+
+        x = xor_128_bit_sequences(gr, complemented_message)
+        complemented_x = complement_to_n_bits(x, 256)
+
+        hx = G(complemented_x)
+        y = xor_128_bit_sequences(hx, r)
+
+        return x, y
+
+    def oaep_unpadding(self, x, y):
+        complemented_x = complement_to_n_bits(x, 256)
+        r = xor_128_bit_sequences(G(complemented_x), y)
+
+        complemented_r = complement_to_n_bits(r, 256)
+        complemented_message = xor_128_bit_sequences(x, G(complemented_r))
+        message = complemented_message[:32]
+
+        return message
 
     def generate_key_pair(self):
         # Find s such that s and phi(n) are coprime
@@ -79,30 +78,25 @@ class RSA:
         return p, s
 
     def encrypt(self, message):
-        if message >= self.n:
-            print('message is greater than n')
-            return
-        return pow(message, self.public_key, self.n)
+        x, y = self.oaep_padding(message)
+        padded_message = int(x + y, 2)
+        if padded_message > self.n:
+            raise ValueError('OAEP padded message cannot be greater than n. Choose greater primes for this message.')
+
+        return pow(padded_message, self.public_key, self.n)
 
     def decrypt(self, encrypted_message):
-        return pow(encrypted_message, self.private_key, self.n)
+        padded_message = pow(encrypted_message, self.private_key, self.n)
+        padded_binary = "{:0256b}".format(padded_message)
+        
+        x = padded_binary[:128]
+        y = padded_binary[128:] 
+        return int(self.oaep_unpadding(x, y), 2)
 
-x, y = oaep_padding(11796378)
-print('x', x)
-print('y', y)
 
-rsa = RSA(4080763177551780022951159366061629923539, 3984429063779698014679984794071118692779)
+rsaoaep = RSA_OAEP(4080763177551780022951159366061629923539, 3984429063779698014679984794071118692779)
+encrypted = rsaoaep.encrypt(11796378)
+print('encrypted: ', encrypted)
 
-intxy = int(x + y, 2)
-print('intxy', intxy)
-encrypted = rsa.encrypt(intxy)
-print('encrypted', encrypted)
-
-decrypted = rsa.decrypt(encrypted)
-print('decrypted', decrypted)
-
-decrypted_bin = "{:0256b}".format(decrypted)
-decrypted_x = decrypted_bin[:128]
-decrypted_y = decrypted_bin[128:]
-
-print(int(oaep_unpadding(decrypted_x, decrypted_y), 2))
+decrypted = rsaoaep.decrypt(encrypted)
+print('decrypted: ', decrypted)
