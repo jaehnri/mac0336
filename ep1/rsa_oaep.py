@@ -79,17 +79,30 @@ class RSA:
         return p, s
 
     def encrypt(self, message):
+        if message >= self.n:
+            print('message is greater than n')
+            return
         return pow(message, self.public_key, self.n)
 
     def decrypt(self, encrypted_message):
         return pow(encrypted_message, self.private_key, self.n)
 
-rsa = RSA(2, 11)
-encrypted = rsa.encrypt(9)
-print(encrypted)
+x, y = oaep_padding(11796378)
+print('x', x)
+print('y', y)
+
+rsa = RSA(4080763177551780022951159366061629923539, 3984429063779698014679984794071118692779)
+
+intxy = int(x + y, 2)
+print('intxy', intxy)
+encrypted = rsa.encrypt(intxy)
+print('encrypted', encrypted)
 
 decrypted = rsa.decrypt(encrypted)
-print(decrypted)
+print('decrypted', decrypted)
 
-x, y = oaep_padding(11796378)
-print(oaep_unpadding(x, y))
+decrypted_bin = "{:0256b}".format(decrypted)
+decrypted_x = decrypted_bin[:128]
+decrypted_y = decrypted_bin[128:]
+
+print(int(oaep_unpadding(decrypted_x, decrypted_y), 2))
