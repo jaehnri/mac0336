@@ -105,6 +105,13 @@ def find_next_prime(start):
         i += 1
 
 def count_different_bits(seq1, seq2):
+    """
+    Counts differing bits between two binary sequences and returns the maximum length between the two.
+    It is an auxiliar function to check the Avalanche effect.
+
+    If one sequence is bigger than the other, it fills the smaller one with zeros to the left until 
+    both have the same len.
+    """
     # Ensure sequences have the same length
     max_len = max(len(seq1), len(seq2))
     seq1 = seq1.zfill(max_len)
@@ -252,7 +259,6 @@ def main():
         raise SystemError('Failed to encrypt or decrypt.')
 
     print('\n\n########## Two leftmost bits complemented ######')
-    # 2 leftmost bits complemented
     mask = (1 << 31) | (1 << 30)
     message_with_two_complemented = message ^ mask # 3233021850
     encrypted_two_leftmost_complemented = rsaoaep.encrypt(message_with_two_complemented) 
