@@ -3,7 +3,7 @@ João Henri Carrenho Rocha
 11796378
 
 Esta entrega contém apenas dois arquivos: 
-- LEIA.ME, que contém instruções e cada uma das saídas;
+- LEIA.ME.txt, que contém instruções e cada uma das saídas;
 - rsa_oaep.py, com minha implementação e documentação das funções;
 
 ### Especificações do ambiente: ###
