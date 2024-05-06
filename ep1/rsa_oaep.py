@@ -92,6 +92,12 @@ def miller_rabin(n, k=40):
     return True
 
 def find_next_prime(start):
+    """
+    Finds the probable next prime from `start` using Miller-Rabin Primality Test with 40 rounds each.
+    It loops indefinitely until it finds and return a (probable) prime number.
+
+    We are using 40 rounds as recommended here: https://stackoverflow.com/a/6330138
+    """
     i = start
     while True:
         if miller_rabin(i):
@@ -113,8 +119,21 @@ class RSA_OAEP:
         print('Φ(n): ', self.phi)
     
     def oaep_padding(self, nusp):
+        """
+        Performs Output Added Extension Protocol as defined in the exercise statement.
+
+        It receives an integer 'nusp', that is the message to be padded. It will generate a
+        NONCE 128-bit r and will format nusp into 32 bits, applying XORs and SHAs as given in
+        the diagram.
+        
+        It is important to notice that, if nusp is greater than 32 bits, the program will probably
+        fail silently, i.e., encryption will work without errors, but as the 32-bit message is
+        complemented with zeros, decryption will only consider the message being the first 32, 
+        leading to a different result than expected.
+        """
+    
         r = generate_random_128_bit()
-        print('OAEP r: ', r)
+        print('OAEP R: ', r)
         complemented_r = complement_to_n_bits(r, 256)
 
         message = "{:032b}".format(nusp)
@@ -131,6 +150,9 @@ class RSA_OAEP:
         return x, y
 
     def oaep_unpadding(self, x, y):
+        """
+        Performs the OAEP unpadding as given in the exercise diagram.
+        """
         complemented_x = complement_to_n_bits(x, 256)
         r = xor_128_bit_sequences(G(complemented_x), y)
 
@@ -141,6 +163,12 @@ class RSA_OAEP:
         return message
 
     def generate_key_pair(self):
+        """
+        Generates a public-private key pair for RSA encryption.
+        It selects a random integer 's' such that 's' and Euler's totient function of 'n' (phi(n))
+        are coprime. It then computes the modular multiplicative inverse of 's' modulo 'phi(n)'
+        to obtain the public key 'p'. The function returns the tuple (p, s).
+        """
         # Find s such that s and phi(n) are coprime
         s = secrets.randbelow(self.phi)
         while gcd(s, self.phi) != 1:
@@ -150,6 +178,12 @@ class RSA_OAEP:
         return p, s
 
     def encrypt(self, message):
+        """
+        Performs OAEP padding followed by RSA encryption. The function receives an integer
+        and returns an encrypted integer.
+
+        It raises ValueError if the OAEP-padded message is greater than the modulus 'n'.
+        """
         x, y = self.oaep_padding(message)
         print('X||Y: ', x+y)
 
@@ -162,6 +196,10 @@ class RSA_OAEP:
         return encrypted_message
 
     def decrypt(self, encrypted_message):
+        """
+        Performs RSA decryption followed by OAEP unpadding. The function receives the encrypted integer
+        and returns the decrypted integer.
+        """
         padded_message = pow(encrypted_message, self.private_key, self.n)
         padded_binary = "{:0256b}".format(padded_message)
         
