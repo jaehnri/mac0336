@@ -105,18 +105,20 @@ def find_next_prime(start):
         i += 1
 
 class RSA_OAEP:
-    def __init__(self, q, r):
+    def __init__(self, q, r, oaep_r):
         self.q = q
         self.r = r
         self.n = q * r
         self.phi = (q - 1) * (r - 1)
         self.public_key, self.private_key = self.generate_key_pair()
-        print('q', self.q)
-        print('r', self.r)
+        self.oaep_r = oaep_r
+        print('q: ', self.q)
+        print('r: ', self.r)
         print('Public key: ', self.public_key)
         print('Private key: ', self.private_key)
         print('n: ', self.n)
         print('Φ(n): ', self.phi)
+        print('OAEP R: ', self.oaep_r)
     
     def oaep_padding(self, nusp):
         """
@@ -131,10 +133,7 @@ class RSA_OAEP:
         complemented with zeros, decryption will only consider the message being the first 32, 
         leading to a different result than expected.
         """
-    
-        r = generate_random_128_bit()
-        print('OAEP R: ', r)
-        complemented_r = complement_to_n_bits(r, 256)
+        complemented_r = complement_to_n_bits(self.oaep_r, 256)
 
         message = "{:032b}".format(nusp)
         complemented_message = complement_to_n_bits(message, 128)
@@ -145,7 +144,7 @@ class RSA_OAEP:
         complemented_x = complement_to_n_bits(x, 256)
 
         hx = G(complemented_x)
-        y = xor_128_bit_sequences(hx, r)
+        y = xor_128_bit_sequences(hx, self.oaep_r)
 
         return x, y
 
@@ -154,9 +153,9 @@ class RSA_OAEP:
         Performs the OAEP unpadding as given in the exercise diagram.
         """
         complemented_x = complement_to_n_bits(x, 256)
-        r = xor_128_bit_sequences(G(complemented_x), y)
+        oaep_r = xor_128_bit_sequences(G(complemented_x), y)
 
-        complemented_r = complement_to_n_bits(r, 256)
+        complemented_r = complement_to_n_bits(oaep_r, 256)
         complemented_message = xor_128_bit_sequences(x, G(complemented_r))
         message = complemented_message[:32]
 
@@ -184,6 +183,7 @@ class RSA_OAEP:
 
         It raises ValueError if the OAEP-padded message is greater than the modulus 'n'.
         """
+        print('Original message: ', message)
         x, y = self.oaep_padding(message)
         print('X||Y: ', x+y)
 
@@ -192,7 +192,9 @@ class RSA_OAEP:
             raise ValueError('OAEP padded message cannot be greater than n. Choose greater primes for this message.')
 
         encrypted_message = pow(padded_message, self.public_key, self.n)
+        encrypted_binary = "{:0256b}".format(encrypted_message)
         print('Integer encrypted message: ', encrypted_message)
+        print('Binary encrypted message: ', encrypted_binary)
         return encrypted_message
 
     def decrypt(self, encrypted_message):
@@ -212,12 +214,12 @@ class RSA_OAEP:
 
 def main():
     # We are using NUSP concatenated 5 times because the OAEP padded message is usually
-    # bigger than the version with 4 concatenations
+    # bigger than the version with 4 concatenations. The number below is 130 bits and n is 260 bits.
     big_nusp = 11796378_11796378_11796378_11796378_11796378
     q = find_next_prime(big_nusp) # 11796378_11796378_11796378_11796378_11796407
     r = find_next_prime(q+2) # 11796378_11796378_11796378_11796378_11796421
-
-    rsaoaep = RSA_OAEP(q, r)
+    oaep_r = generate_random_128_bit()
+    rsaoaep = RSA_OAEP(q, r, oaep_r)
 
     message = 11796378
     encrypted = rsaoaep.encrypt(message)
