@@ -104,6 +104,18 @@ def find_next_prime(start):
             return i
         i += 1
 
+def count_different_bits(seq1, seq2):
+    # Ensure sequences have the same length
+    max_len = max(len(seq1), len(seq2))
+    seq1 = seq1.zfill(max_len)
+    seq2 = seq2.zfill(max_len)
+    
+    count = 0
+    for bit1, bit2 in zip(seq1, seq2):
+        if bit1 != bit2:
+            count += 1
+    return count, max_len
+
 class RSA_OAEP:
     def __init__(self, q, r, oaep_r):
         self.q = q
@@ -221,9 +233,40 @@ def main():
     oaep_r = generate_random_128_bit()
     rsaoaep = RSA_OAEP(q, r, oaep_r)
 
+    # Below, we will execute the exercise 5) of this program-exercise, encrypting my NUSP
+    # with and without the complemented bits and verify the Avalanche-Effect in the encrypted
+    # binaries.
+    print('\n\n########## No complemented bits ######')
     message = 11796378
     encrypted = rsaoaep.encrypt(message)
-    decrypted = rsaoaep.decrypt(encrypted)
-    return message == decrypted
+    original_binary = "{:0256b}".format(encrypted)
+    if message != rsaoaep.decrypt(encrypted):
+        raise SystemError('Failed to encrypt or decrypt.')
+
+    print('\n\n########## Leftmost bit complemented ######')
+    mask = 1 << 31
+    message_with_one_complemented = message ^ mask # 2159280026
+    encrypted_leftmost_complemented = rsaoaep.encrypt(message_with_one_complemented)
+    leftmost_complemented_binary = "{:0256b}".format(encrypted_leftmost_complemented)
+    if message_with_one_complemented != rsaoaep.decrypt(encrypted_leftmost_complemented):
+        raise SystemError('Failed to encrypt or decrypt.')
+
+    print('\n\n########## Two leftmost bits complemented ######')
+    # 2 leftmost bits complemented
+    mask = (1 << 31) | (1 << 30)
+    message_with_two_complemented = message ^ mask # 3233021850
+    encrypted_two_leftmost_complemented = rsaoaep.encrypt(message_with_two_complemented) 
+    two_leftmost_complemented_binary = "{:0256b}".format(encrypted_two_leftmost_complemented)
+    if message_with_two_complemented != rsaoaep.decrypt(encrypted_two_leftmost_complemented):
+        raise SystemError('Failed to encrypt or decrypt.')
+
+    diff, maxlen = count_different_bits(original_binary, leftmost_complemented_binary)
+    print("Original and 1-complemented differ in {} bits out of {}".format(diff, maxlen))
+
+    diff, maxlen = count_different_bits(original_binary, two_leftmost_complemented_binary)
+    print("Original and 2-complemented differ in {} bits out of {}".format(diff, maxlen))
+          
+    diff, maxlen = count_different_bits(leftmost_complemented_binary, two_leftmost_complemented_binary)
+    print("1-complemented and 2-complemented differ in {} bits out of {}".format(diff, maxlen))
 
 main()
