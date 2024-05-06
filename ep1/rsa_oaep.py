@@ -260,6 +260,8 @@ def main():
     if message_with_two_complemented != rsaoaep.decrypt(encrypted_two_leftmost_complemented):
         raise SystemError('Failed to encrypt or decrypt.')
 
+
+    print('\n\n########## Avalanche Effect Check ######')
     diff, maxlen = count_different_bits(original_binary, leftmost_complemented_binary)
     print("Original and 1-complemented differ in {} bits out of {}".format(diff, maxlen))
 
