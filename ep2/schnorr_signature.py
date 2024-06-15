@@ -69,14 +69,14 @@ nusp = 11796378
 concatenated_nusp = nusp_until_n_bits(nusp, 80)
 
 q = find_next_prime(concatenated_nusp)
-print("O valor de q de {} bits é {} ... .".format(len(bin(q)[2:]), q))
+print("O valor de q de {} bits é {} ...".format(len(bin(q)[2:]), q))
 
-p = 0
+# We start k as the first 512 bit number divided by p. This way,
+# the loop below will only yield primes with at least 512 bits.
 k = first_512_bit_number() // q
+p = 0
+
 while not miller_rabin(p):
     p = k * q + 1
     k += 1
-
-# print(k)
-print("O valor de p de {} bits é {} ...".format(len(bin(p)[2:]), p))
- 
+print("O valor de p de {} bits é {} ... .".format(len(bin(p)[2:]), p))
