@@ -88,6 +88,11 @@ def read_file_to_variable(file_path):
     return content
 
 class Authority:
+    """
+    Authority is responsible for generating public parameters, registering, and distributing
+    (identifier, public_key) certificates.
+
+    """
     def __init__(self, nusp):
         self.q = self.find_next_prime(self.nusp_until_n_bits(nusp, 80))
         print("O valor de q de {} bits é {} ...".format(self.q.bit_length(), self.q))
@@ -228,7 +233,7 @@ class SchnorrSigner:
 
 class SchnorrVerifier:
     """
-    A class to verify Schnorr signatures using a given public key and verifier value. 
+    SchnorrVerifier verifies Schnorr signatures using a given public key and verifier value. 
 
     Attributes:
         public_key (tuple): A tuple containing the values (p, q, b).
