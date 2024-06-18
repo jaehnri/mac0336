@@ -90,14 +90,14 @@ def read_file_to_variable(file_path):
 class Authority:
     def __init__(self, nusp):
         self.q = self.find_next_prime(self.nusp_until_n_bits(nusp, 80))
-        print("O valor de q de {} bits é {} ...".format(len(bin(self.q)[2:]), self.q))
+        print("O valor de q de {} bits é {} ...".format(self.q.bit_length(), self.q))
         self.k = self.find_k()
         self.p = self.q * self.k + 1
-        print("O valor de p de {} bits é {} ... .".format(len(bin(self.p)[2:]), self.p))
+        print("O valor de p de {} bits é {} ... .".format(self.p.bit_length(), self.p))
         self.g = self.find_generator()
-        print("O valor de g de {} bits é {} ...".format(len(bin(self.g)[2:]), self.g))
+        print("O valor de g de {} bits é {} ...".format(self.g.bit_length(), self.g))
         self.b = self.find_b()
-        print("O valor de b de {} bits é {} ...".format(len(bin(self.b)[2:]), self.b))
+        print("O valor de b de {} bits é {} ...".format(self.b.bit_length(), self.b))
         self.certificates = {}
 
     def nusp_until_n_bits(self, nusp, n):
@@ -187,9 +187,9 @@ class SchnorrSigner:
         self.q = public_key[1]
         self.b = public_key[2]
         self.s = random.randint(1, authority.q - 1)
-        print("O valor de s de {} bits é {} ...".format(len(bin(self.s)[2:]), self.s))
+        print("O valor de s de {} bits é {} ...".format(self.s.bit_length(), self.s))
         self.v = self.find_v()
-        print("O valor de v de {} bits é {} ...".format(len(bin(self.v)[2:]), self.v))
+        print("O valor de v de {} bits é {} ...".format(self.v.bit_length(), self.v))
 
     def find_v(self):
         b_inv = mod_inverse(self.b, self.p)
@@ -198,10 +198,10 @@ class SchnorrSigner:
     
     def sign(self, message):
         r = random.randint(1, self.q - 1)
-        print("O valor de r de {} bits é {} ...".format(len(bin(r)[2:]), r))
+        print("O valor de r de {} bits é {} ...".format(r.bit_length(), r))
 
         u = pow(self.b, r, self.p)
-        print("O valor de u de {} bits é {} ...".format(len(bin(u)[2:]), u))
+        print("O valor de u de {} bits é {} ...".format(u.bit_length(), u))
 
         concatenated_message = message + str(u)
         concatenated_message_bytes = concatenated_message.encode('utf-8')
@@ -209,7 +209,7 @@ class SchnorrSigner:
         print("O valor de e de {} bits em hexadecimal é {} ...".format(str(e.digest_size * 8), e.hexdigest()))
         
         y = (self.s * int(e.hexdigest(), 16) + r) % self.q
-        print("O valor de y de {} bits é {} ...".format(len(bin(y)[2:]), y))
+        print("O valor de y de {} bits é {} ...".format(y.bit_length(), y))
 
         return y, e
 
@@ -224,7 +224,7 @@ class SchnorrVerifier:
         b_y_mod_p = pow(self.b, y, self.p)
         v_e_mod_p = pow(self.v, int(e.hexdigest(), 16), self.p)
         z = (b_y_mod_p * v_e_mod_p) % self.p
-        print("O valor de z de {} bits é {} ...".format(len(bin(z)[2:]), z))
+        print("O valor de z de {} bits é {} ...".format(z.bit_length(), z))
         
         concatenated_message = message + str(z)
         concatenated_message_bytes = concatenated_message.encode('utf-8')
@@ -232,22 +232,26 @@ class SchnorrVerifier:
         print("O valor de v de {} bits em hexadecimal é {} ...".format(str(e_verified.digest_size * 8), e_verified.hexdigest()))
 
         if e.hexdigest() == e_verified.hexdigest():
-            print("e == e'")
+            print("O valor de e é igual a e':")
         else:
-            print("e != e'")
+            print("O valor de e NÃO é igual a e':")
+        print("e:  {}".format(e.hexdigest()))
+        print("e': {}".format(e_verified.hexdigest()))
 
 
 nusp = 11796378
 authority = Authority(nusp)
 
+# alice_id is the I_A, used to register v into the certificate authority.
 alice_id = 'Alice'
 alice = SchnorrSigner(authority.public_key(), alice_id)
 
+# Alice transfers v into the authority T.
 authority.register_certificate(alice.identification, alice.v)
 
+# Beto uses the authority T to fetch Alice's public key.
 beto = SchnorrVerifier(authority.public_key(), authority.get_certificate(alice.identification))
 
 message = read_file_to_variable('criptotexto.txt')
 y, e = alice.sign(message)
-
 beto.verify(message, y, e)
