@@ -1,0 +1,55 @@
+### Cabeçalho ###
+João Henri Carrenho Rocha
+11796378
+
+Esta entrega contém apenas dois arquivos: 
+- LEIA.ME.txt, que contém instruções e cada uma das saídas;
+- rsa_oaep.py, com minha implementação e documentação das funções;
+
+### Especificações do ambiente: ###
+
+A versão mínima para rodar este programa deve ser o Python 3.6, haja visto que o método de geração segura de números pseudoaleatórios
+"secrets.randbelow" foi adicionada a partir dessa versão. Abaixo, as especificações da máquina:
+
+## Versão do Python:
+$ python3
+Python 3.9.6 (default, May  7 2023, 23:32:44) 
+[Clang 14.0.3 (clang-1403.0.22.14.1)] on darwin
+
+## Sistema Operacional:
+$ sw_vers
+ProductName:            macOS
+ProductVersion:         13.2.1
+BuildVersion:           22D68
+
+## Chip:
+$ sysctl -n machdep.cpu.brand_string
+Apple M2 Pro
+
+## Versão do Kernel, sistema e arquiteura
+$ uname -a
+Darwin MacBook-Pro.local 22.3.0 Darwin Kernel Version 22.3.0: Mon Jan 30 20:39:46 PST 2023; root:xnu-8792.81.3~2/RELEASE_ARM64_T6020 arm64
+
+### Instruções de execução ###
+Para ler a mensagem, este programa assume que existe um arquivo "criptotexto.txt" na mesma pasta que ele.
+Este arquivo será compactado e enviado junto deste programa. Para rodar, apenas faça:
+$ python3 schnorr_signature.py
+
+### Saída do programa ###
+
+% python3 schnorr_signature.py                                                               
+O valor de q de 80 bits é 848623985854396981575613 ...
+O valor de p de 512 bits é 7720630336395695234071669479363795387399881981210158059017646509982272496774205397007230736367193940403810892577760288758881851303726219322456727544135681 ... .
+O valor de g de 5 bits é 17 ...
+O valor de b de 511 bits é 5026898193365864908348480524404929562940072425129417375999042366295053348809596247903637212387012975130279872079821514518182690361195925274634932846834339 ...
+O valor de s de 80 bits é 824914224003798559799063 ...
+O valor de v de 511 bits é 4191367110098800090852850300748284978987321885395550783203256687597723200822303743446466297819949010357616351891594178113017274487608015734325180169685540 ...
+O valor de r de 78 bits é 152615380247426034876419 ...
+O valor de u de 510 bits é 1846110062157044132407260879351953769150965204093372928845247627446122185457257563489271033509690919824413488122843373316000656306059541447708985808384173 ...
+O valor de e de 256 bits em hexadecimal é 1e2d814e1ae51b85657029e880bc4a67211743b10732deede9b85555d156ddc9 ...
+O valor de y de 79 bits é 344466702440975208037819 ...
+O valor de z de 510 bits é 1846110062157044132407260879351953769150965204093372928845247627446122185457257563489271033509690919824413488122843373316000656306059541447708985808384173 ...
+O valor de v de 256 bits em hexadecimal é 1e2d814e1ae51b85657029e880bc4a67211743b10732deede9b85555d156ddc9 ...
+O valor de e é igual a e':
+e:  1e2d814e1ae51b85657029e880bc4a67211743b10732deede9b85555d156ddc9
+e': 1e2d814e1ae51b85657029e880bc4a67211743b10732deede9b85555d156ddc9
