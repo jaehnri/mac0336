@@ -37,37 +37,10 @@ def miller_rabin(n, k=40):
     # If n passes all iterations, it is probably prime
     return True
 
-def find_next_prime(start):
-    """
-    Finds the probable next prime from `start` using Miller-Rabin Primality Test with 40 rounds each.
-    It loops indefinitely until it finds and return a (probable) prime number.
-
-    We are using 40 rounds as recommended here: https://stackoverflow.com/a/6330138
-    """
-    i = start
-    while True:
-        if miller_rabin(i):
-            return i
-        i += 1
-
-
-def nusp_until_n_bits(nusp, n):
-    # [2:] removes the '0b' prefix
-    binary_nusp = bin(nusp)[2:]
-    
-    # We concatenate the binary form until n bits rather than the actual number.
-    # Then, we use the remainder as the most significant bits to complete.
-    reps = n // len(binary_nusp)
-    remainder = n % len(binary_nusp)
-    concatenated_bits = binary_nusp[:remainder] + binary_nusp * reps
-    
-    return int(concatenated_bits, 2)
-
-def first_512_bit_number():
-    return 2 ** 511
-
 def prime_factors(n):
-    """Returns a list of all prime factors of the given number n."""
+    """
+    Returns a list of all prime factors of the given number n.
+    """
     factors = []
     
     # Handle the number of 2s that divide n
@@ -87,52 +60,6 @@ def prime_factors(n):
         factors.append(n)
     
     return factors
-
-def find_k(q):
-    """
-    Find a k such that:
-     1. p = kq + 1. 
-     2. p is prime.
-     3. p is 512-bit.
-     4. k is easily factorable.
-
-    k is found through a left and right strategy, where left is a 
-    small integer and right is a big power of 2.
-    """
-    bits_q = q.bit_length()
-    left = 2
-    while True:
-        right = 2 ** (512 - bits_q - left.bit_length())
-        k = left * right
-
-        if miller_rabin(k * q + 1):
-            return k
-        left += 1
-
-def is_generator(g, phi_p, factors):
-    for factor in factors:
-        if pow(g, phi_p // factor, p) == 1:
-            return False
-    return True
-
-def find_generator(p, q, k):
-    phi_p = p - 1
-    factors = prime_factors(k)
-    factors.append(q)
-
-    g = 2
-    while True:
-        if is_generator(g, phi_p, factors):
-            return g
-        g += 1
-
-def list_b(p, g, q):
-    """
-    Compute b = g^((p-1)/q) mod p.
-    """
-    phi_p = p - 1
-    exponent = phi_p // q
-    return pow(g, exponent, p)
 
 def find_v(b, s, p):
     b_inv = mod_inverse(b, p)
@@ -156,24 +83,94 @@ def mod_inverse(a, m):
     # Ensure the result is positive within the range [0, m-1]
     return x1 + m0 if x1 < 0 else x1
 
+class Authority:
+    def __init__(self, nusp):
+        self.q = self.find_next_prime(self.nusp_until_n_bits(nusp, 80))
+        print("O valor de q de {} bits é {} ...".format(len(bin(self.q)[2:]), self.q))
+        self.k = self.find_k()
+        self.p = self.q * self.k + 1
+        print("O valor de p de {} bits é {} ... .".format(len(bin(self.p)[2:]), self.p))
+        self.g = self.find_generator()
+        print("O valor de g de {} bits é {} ...".format(len(bin(self.g)[2:]), self.g))
+        self.b = self.find_b()
+        print("O valor de b de {} bits é {} ...".format(len(bin(self.b)[2:]), self.b))
+
+    def nusp_until_n_bits(self, nusp, n):
+        # [2:] removes the '0b' prefix
+        binary_nusp = bin(nusp)[2:]
+        
+        # We concatenate the binary form until n bits rather than the actual number.
+        # Then, we use the remainder as the most significant bits to complete.
+        reps = n // len(binary_nusp)
+        remainder = n % len(binary_nusp)
+        concatenated_bits = binary_nusp[:remainder] + binary_nusp * reps
+        
+        return int(concatenated_bits, 2)
+    
+    def find_next_prime(self, start):
+        """
+        Find the probable next prime from `start` using Miller-Rabin Primality Test with 40 rounds each.
+        It loops indefinitely until it finds and return a (probable) prime number.
+
+        We are using 40 rounds as recommended here: https://stackoverflow.com/a/6330138
+        """
+        i = start
+        while True:
+            if miller_rabin(i):
+                return i
+            i += 1
+
+    def find_k(self):
+        """
+        Find a k such that:
+        1. p = kq + 1. 
+        2. p is prime.
+        3. p is 512-bit.
+        4. k is easily factorable.
+
+        k is found through a left and right strategy, where left is a 
+        small integer and right is a big power of 2.
+        """
+        bits_q = self.q.bit_length()
+        left = 2
+        while True:
+            right = 2 ** (512 - bits_q - left.bit_length())
+            k = left * right
+
+            if miller_rabin(k * self.q + 1):
+                return k
+            left += 1
+
+    def is_generator(self, g, phi_p, factors):
+        for factor in factors:
+            if pow(g, phi_p // factor, self.p) == 1:
+                return False
+        return True
+
+    def find_generator(self):
+        phi_p = self.p - 1
+        factors = prime_factors(self.k)
+        factors.append(self.q)
+
+        g = 2
+        while True:
+            if self.is_generator(g, phi_p, factors):
+                return g
+            g += 1
+
+    def find_b(self):
+        """
+        Compute b = g^((p-1)/q) mod p.
+        """
+        phi_p = self.p - 1
+        exponent = phi_p // self.q
+        return pow(self.g, exponent, self.p)
+
 nusp = 11796378
-concatenated_nusp = nusp_until_n_bits(nusp, 80)
+authority = Authority(nusp)
 
-q = find_next_prime(concatenated_nusp)
-print("O valor de q de {} bits é {} ...".format(len(bin(q)[2:]), q))
-
-k = find_k(q)
-p = q * k + 1
-print("O valor de p de {} bits é {} ... .".format(len(bin(p)[2:]), p))
-
-g = find_generator(p, q, k)
-print("O valor de g de {} bits é {} ...".format(len(bin(g)[2:]), g))
-
-b = list_b(p, g, q)
-print("O valor de b de {} bits é {} ...".format(len(bin(b)[2:]), b))
-
-s = random.randint(1, q - 1)
+s = random.randint(1, authority.q - 1)
 print("O valor de s de {} bits é {} ...".format(len(bin(s)[2:]), s))
 
-v = find_v(b, s, p)
+v = find_v(authority.b, s, authority.p)
 print("O valor de v de {} bits é {} ...".format(len(bin(v)[2:]), v))
