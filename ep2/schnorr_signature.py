@@ -127,10 +127,34 @@ def find_generator(p, q, k):
         g += 1
 
 def list_b(p, g, q):
-    """Compute b = g^((p-1)/q) mod p."""
+    """
+    Compute b = g^((p-1)/q) mod p.
+    """
     phi_p = p - 1
     exponent = phi_p // q
     return pow(g, exponent, p)
+
+def find_v(b, s, p):
+    b_inv = mod_inverse(b, p)
+    v = pow(b_inv, s, p)
+    return v
+
+def mod_inverse(a, m):
+    """
+    Computes the modular multiplicative inverse of 'a' modulo 'm'.
+    This function implements the Extended Euclidean Algorithm to find the modular inverse.
+
+    It iteratively computes the greatest common divisor (GCD) of 'a' and 'm' and 
+    simultaneously calculates the coefficients of Bezout's identity, which provides 
+    the modular inverse.
+    """
+    m0, x0, x1 = m, 0, 1
+    while a > 1:
+        q = a // m
+        m, a = a % m, m
+        x0, x1 = x1 - q * x0, x0
+    # Ensure the result is positive within the range [0, m-1]
+    return x1 + m0 if x1 < 0 else x1
 
 nusp = 11796378
 concatenated_nusp = nusp_until_n_bits(nusp, 80)
@@ -143,7 +167,13 @@ p = q * k + 1
 print("O valor de p de {} bits é {} ... .".format(len(bin(p)[2:]), p))
 
 g = find_generator(p, q, k)
-print("O valor de g de {} bits é {} ... .".format(len(bin(g)[2:]), g))
+print("O valor de g de {} bits é {} ...".format(len(bin(g)[2:]), g))
 
 b = list_b(p, g, q)
-print("O valor de b de {} bits é {} ... .".format(len(bin(b)[2:]), b))
+print("O valor de b de {} bits é {} ...".format(len(bin(b)[2:]), b))
+
+s = random.randint(1, q - 1)
+print("O valor de s de {} bits é {} ...".format(len(bin(s)[2:]), s))
+
+v = find_v(b, s, p)
+print("O valor de v de {} bits é {} ...".format(len(bin(v)[2:]), v))
