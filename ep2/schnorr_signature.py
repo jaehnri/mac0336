@@ -1,4 +1,5 @@
 import secrets
+import random
 
 def miller_rabin(n, k=40):
     # Base cases for small primes
@@ -65,18 +66,84 @@ def nusp_until_n_bits(nusp, n):
 def first_512_bit_number():
     return 2 ** 511
 
+def prime_factors(n):
+    """Returns a list of all prime factors of the given number n."""
+    factors = []
+    
+    # Handle the number of 2s that divide n
+    while n % 2 == 0:
+        factors.append(2)
+        n //= 2
+    
+    # n must be odd at this point, thus a skip of 2 (i.e., i = i + 2) can be used
+    for i in range(3, int(n**0.5) + 1, 2):
+        # While i divides n, add i and divide n
+        while n % i == 0:
+            factors.append(i)
+            n //= i
+    
+    # This condition is to check if n is a prime number greater than 2
+    if n > 2:
+        factors.append(n)
+    
+    return factors
+
+def find_k(q):
+    """
+    Find a k such that:
+     1. p = kq + 1. 
+     2. p is prime.
+     3. p is 512-bit.
+     4. k is easily factorable.
+
+    k is found through a left and right strategy, where left is a 
+    small integer and right is a big power of 2.
+    """
+    bits_q = q.bit_length()
+    left = 2
+    while True:
+        right = 2 ** (512 - bits_q - left.bit_length())
+        k = left * right
+
+        if miller_rabin(k * q + 1):
+            return k
+        left += 1
+
+def is_generator(g, phi_p, factors):
+    for factor in factors:
+        if pow(g, phi_p // factor, p) == 1:
+            return False
+    return True
+
+def find_generator(p, q, k):
+    phi_p = p - 1
+    factors = prime_factors(k)
+    factors.append(q)
+
+    g = 2
+    while True:
+        if is_generator(g, phi_p, factors):
+            return g
+        g += 1
+
+def list_b(p, g, q):
+    """Compute b = g^((p-1)/q) mod p."""
+    phi_p = p - 1
+    exponent = phi_p // q
+    return pow(g, exponent, p)
+
 nusp = 11796378
 concatenated_nusp = nusp_until_n_bits(nusp, 80)
 
 q = find_next_prime(concatenated_nusp)
 print("O valor de q de {} bits é {} ...".format(len(bin(q)[2:]), q))
 
-# We start k as the first 512 bit number divided by p. This way,
-# the loop below will only yield primes with at least 512 bits.
-k = first_512_bit_number() // q
-p = 0
-
-while not miller_rabin(p):
-    p = k * q + 1
-    k += 1
+k = find_k(q)
+p = q * k + 1
 print("O valor de p de {} bits é {} ... .".format(len(bin(p)[2:]), p))
+
+g = find_generator(p, q, k)
+print("O valor de g de {} bits é {} ... .".format(len(bin(g)[2:]), g))
+
+b = list_b(p, g, q)
+print("O valor de b de {} bits é {} ... .".format(len(bin(b)[2:]), b))
