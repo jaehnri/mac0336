@@ -1,5 +1,6 @@
-import secrets
+import hashlib
 import random
+import secrets
 
 def miller_rabin(n, k=40):
     # Base cases for small primes
@@ -61,11 +62,6 @@ def prime_factors(n):
     
     return factors
 
-def find_v(b, s, p):
-    b_inv = mod_inverse(b, p)
-    v = pow(b_inv, s, p)
-    return v
-
 def mod_inverse(a, m):
     """
     Computes the modular multiplicative inverse of 'a' modulo 'm'.
@@ -82,6 +78,14 @@ def mod_inverse(a, m):
         x0, x1 = x1 - q * x0, x0
     # Ensure the result is positive within the range [0, m-1]
     return x1 + m0 if x1 < 0 else x1
+
+def read_file_to_variable(file_path):
+    """
+    Reads the contents of the file into a variable.
+    """
+    with open(file_path, 'r') as file:
+        content = file.read()
+    return content
 
 class Authority:
     def __init__(self, nusp):
@@ -166,11 +170,44 @@ class Authority:
         exponent = phi_p // self.q
         return pow(self.g, exponent, self.p)
 
+    def public_key(self):
+        return self.p, self.q, self.b
+class SchnorrSigner:
+    def __init__(self, public_key):
+        self.p = public_key[0]
+        self.q = public_key[1]
+        self.b = public_key[2]
+        self.s = random.randint(1, authority.q - 1)
+        print("O valor de s de {} bits é {} ...".format(len(bin(self.s)[2:]), self.s))
+        self.v = self.find_v()
+        print("O valor de v de {} bits é {} ...".format(len(bin(self.v)[2:]), self.v))
+
+    def find_v(self):
+        b_inv = mod_inverse(self.b, self.p)
+        v = pow(b_inv, self.s, self.p)
+        return v
+    
+    def sign(self, message):
+        r = random.randint(1, self.q - 1)
+        print("O valor de r de {} bits é {} ...".format(len(bin(r)[2:]), r))
+
+        u = pow(self.b, r, self.p)
+        print("O valor de u de {} bits é {} ...".format(len(bin(u)[2:]), u))
+
+        concatenated_message = message + str(u)
+        concatenated_message_bytes = concatenated_message.encode('utf-8')
+        e = hashlib.sha3_256(concatenated_message_bytes)
+        print("O valor de e de {} bits em hexadecimal é {} ...".format(str(e.digest_size * 8), e.hexdigest()))
+        
+        y = (self.s * int(e.hexdigest(), 16) + r) % self.q
+        print("O valor de y de {} bits é {} ...".format(len(bin(y)[2:]), y))
+
+        return y, e
+        
+
 nusp = 11796378
 authority = Authority(nusp)
+alice = SchnorrSigner(authority.public_key())
 
-s = random.randint(1, authority.q - 1)
-print("O valor de s de {} bits é {} ...".format(len(bin(s)[2:]), s))
-
-v = find_v(authority.b, s, authority.p)
-print("O valor de v de {} bits é {} ...".format(len(bin(v)[2:]), v))
+message = read_file_to_variable('criptotexto.txt')
+y, e = alice.sign(message)
