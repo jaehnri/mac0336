@@ -147,12 +147,18 @@ class Authority:
             left += 1
 
     def is_generator(self, g, phi_p, factors):
+        """
+        Checks if a given number is a generator of the multiplicative group of integers modulo p.
+        """
         for factor in factors:
             if pow(g, phi_p // factor, self.p) == 1:
                 return False
         return True
 
     def find_generator(self):
+        """
+        Finds a generator of the multiplicative group of integers modulo p.
+        """
         phi_p = self.p - 1
         factors = prime_factors(self.k)
         factors.append(self.q)
@@ -181,6 +187,13 @@ class Authority:
         return self.certificates[identification]
 
 class SchnorrSigner:
+    """
+    SchnorrSigner creates a Schnorr signature (y, e) using a given public key and an identification value.
+
+    Attributes:
+        public_key (tuple): A tuple containing the values (p, q, b).
+        identification (str): The identifier for the signer.
+    """
     def __init__(self, public_key, identification):
         self.identification = identification
         self.p = public_key[0]
@@ -214,6 +227,13 @@ class SchnorrSigner:
         return y, e
 
 class SchnorrVerifier:
+    """
+    A class to verify Schnorr signatures using a given public key and verifier value. 
+
+    Attributes:
+        public_key (tuple): A tuple containing the values (p, q, b).
+        v (int): The SchnorrSigner's public key.
+    """
     def __init__(self, public_key, v):
         self.p = public_key[0]
         self.q = public_key[1]
