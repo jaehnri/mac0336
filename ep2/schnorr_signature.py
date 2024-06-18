@@ -253,7 +253,7 @@ class SchnorrVerifier:
         concatenated_message = message + str(z)
         concatenated_message_bytes = concatenated_message.encode('utf-8')
         e_verified = hashlib.sha3_256(concatenated_message_bytes)
-        print("O valor de v de {} bits em hexadecimal é {} ...".format(str(e_verified.digest_size * 8), e_verified.hexdigest()))
+        print("O valor de e' de {} bits em hexadecimal é {} ...".format(str(e_verified.digest_size * 8), e_verified.hexdigest()))
 
         if e.hexdigest() == e_verified.hexdigest():
             print("O valor de e é igual a e':")
