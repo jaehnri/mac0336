@@ -113,7 +113,7 @@ class Authority:
     
     def find_next_prime(self, start):
         """
-        Find the probable next prime from `start` using Miller-Rabin Primality Test with 40 rounds each.
+        Finds the probable next prime from `start` using Miller-Rabin Primality Test with 40 rounds each.
         It loops indefinitely until it finds and return a (probable) prime number.
 
         We are using 40 rounds as recommended here: https://stackoverflow.com/a/6330138
@@ -126,7 +126,7 @@ class Authority:
 
     def find_k(self):
         """
-        Find a k such that:
+        Finds a k such that:
         1. p = kq + 1. 
         2. p is prime.
         3. p is 512-bit.
@@ -164,7 +164,7 @@ class Authority:
 
     def find_b(self):
         """
-        Compute b = g^((p-1)/q) mod p.
+        Computes b = g^((p-1)/q) mod p.
         """
         phi_p = self.p - 1
         exponent = phi_p // self.q
