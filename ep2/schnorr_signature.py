@@ -203,11 +203,39 @@ class SchnorrSigner:
         print("O valor de y de {} bits é {} ...".format(len(bin(y)[2:]), y))
 
         return y, e
+
+class SchnorrVerifier:
+    def __init__(self, public_key, v):
+        self.p = public_key[0]
+        self.q = public_key[1]
+        self.b = public_key[2]
+        self.v = v
+    
+    def verify(self, message, y, e):
+        b_y_mod_p = pow(self.b, y, self.p)
+        v_e_mod_p = pow(self.v, int(e.hexdigest(), 16), self.p)
+        z = (b_y_mod_p * v_e_mod_p) % self.p
+        print("O valor de z de {} bits é {} ...".format(len(bin(z)[2:]), z))
         
+        concatenated_message = message + str(z)
+        concatenated_message_bytes = concatenated_message.encode('utf-8')
+        e_verified = hashlib.sha3_256(concatenated_message_bytes)
+        print("O valor de v de {} bits em hexadecimal é {} ...".format(str(e_verified.digest_size * 8), e_verified.hexdigest()))
+
+        if e.hexdigest() == e_verified.hexdigest():
+            print("e == e'!")
+        else:
+            print("e != e'!")
+
 
 nusp = 11796378
 authority = Authority(nusp)
+
 alice = SchnorrSigner(authority.public_key())
+# TODO: pass V to Authority
+beto = SchnorrVerifier(authority.public_key(), alice.v)
 
 message = read_file_to_variable('criptotexto.txt')
 y, e = alice.sign(message)
+
+beto.verify(message, y, e)
