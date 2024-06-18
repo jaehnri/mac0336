@@ -98,6 +98,7 @@ class Authority:
         print("O valor de g de {} bits é {} ...".format(len(bin(self.g)[2:]), self.g))
         self.b = self.find_b()
         print("O valor de b de {} bits é {} ...".format(len(bin(self.b)[2:]), self.b))
+        self.certificates = {}
 
     def nusp_until_n_bits(self, nusp, n):
         # [2:] removes the '0b' prefix
@@ -172,8 +173,16 @@ class Authority:
 
     def public_key(self):
         return self.p, self.q, self.b
+    
+    def register_certificate(self, identification, v):
+        self.certificates[identification] = v
+
+    def get_certificate(self, identification):
+        return self.certificates[identification]
+
 class SchnorrSigner:
-    def __init__(self, public_key):
+    def __init__(self, public_key, identification):
+        self.identification = identification
         self.p = public_key[0]
         self.q = public_key[1]
         self.b = public_key[2]
@@ -223,17 +232,20 @@ class SchnorrVerifier:
         print("O valor de v de {} bits em hexadecimal é {} ...".format(str(e_verified.digest_size * 8), e_verified.hexdigest()))
 
         if e.hexdigest() == e_verified.hexdigest():
-            print("e == e'!")
+            print("e == e'")
         else:
-            print("e != e'!")
+            print("e != e'")
 
 
 nusp = 11796378
 authority = Authority(nusp)
 
-alice = SchnorrSigner(authority.public_key())
-# TODO: pass V to Authority
-beto = SchnorrVerifier(authority.public_key(), alice.v)
+alice_id = 'Alice'
+alice = SchnorrSigner(authority.public_key(), alice_id)
+
+authority.register_certificate(alice.identification, alice.v)
+
+beto = SchnorrVerifier(authority.public_key(), authority.get_certificate(alice.identification))
 
 message = read_file_to_variable('criptotexto.txt')
 y, e = alice.sign(message)
