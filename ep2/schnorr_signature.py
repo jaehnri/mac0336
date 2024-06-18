@@ -91,7 +91,6 @@ class Authority:
     """
     Authority is responsible for generating public parameters, registering, and distributing
     (identifier, public_key) certificates.
-
     """
     def __init__(self, nusp):
         self.q = self.find_next_prime(self.nusp_until_n_bits(nusp, 80))
